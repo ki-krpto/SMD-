@@ -4,7 +4,7 @@
 #include <unistd.h>     // fork, execvp
 #include <sys/types.h>  // pid_t
 #include <sys/wait.h>   // wait
-
+#include "Commands.h"
 
 int main(int argc, char *argv[])
 {
@@ -35,11 +35,6 @@ int main(int argc, char *argv[])
 		{
 			continue;
 		}
-		//if user types exit, then exit
-		if (strcmp(input, "exit") == 0)
-		{
-			break;
-		}
 
 		//array to store command + arguments
 		char* args[64];
@@ -60,13 +55,39 @@ int main(int argc, char *argv[])
 		//requries NULL at the end
 		args[i] = NULL;
 
-		// Debug: print the command to be executed
+		// Trim args[0]
+		int len = strlen(args[0]);
+		while(len > 0 && (args[0][len-1] == ' ' || args[0][len-1] == '\t' || args[0][len-1] == '\r')) {
+    		args[0][len-1] = '\0';
+    		len--;
+		}
 
+		// Trim args[1..] if needed
+		for(int j=1; args[j]!=NULL; j++) {
+    		len = strlen(args[j]);
+   		 	while(len > 0 && (args[j][len-1] == ' ' || args[j][len-1] == '\t' || args[j][len-1] == '\r')) {
+       		args[j][len-1] = '\0';
+        	len--;
+    	}
+}
+		
+		
+		//Handle built in commands from "Commands.h"
+		int result = handle_builtin(args);
+		if (result == 1) 
+		{
+			continue;
+		}
+		if (result == 2) 
+		{
+			break;
+		}
 
 		// Debug: print the command to be executed
 		if (args[0] != NULL) {
 			printf("[DEBUG] Command: %s\n", args[0]);
 		}
+		
 
         //Fork a child process
         pid_t pid = fork();
